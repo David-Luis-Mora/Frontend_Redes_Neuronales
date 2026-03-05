@@ -2,19 +2,12 @@ import gradio as gr
 from tensorflow import keras
 import tensorflow as tf
 
-# =============================
-# Cargar modelo
-# =============================
 
 model = keras.models.load_model(
     "modelo_cod500kOverfitV2.keras",
     compile=True
 )
 
-
-# =============================
-# Clasificación
-# =============================
 
 def clasificar_texto(texto):
 
@@ -28,10 +21,6 @@ def clasificar_texto(texto):
         "Positivo": float(pred)
     }
 
-
-# =============================
-# Interfaz
-# =============================
 
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
@@ -63,7 +52,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     )
 
     gr.Markdown(
-        "⚠️ El modelo puede fallar con sarcasmo o jergas nuevas."
+        "El modelo puede fallar con sarcasmo o jergas nuevas."
     )
 
 
