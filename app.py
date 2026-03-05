@@ -1,70 +1,60 @@
 import gradio as gr
-import numpy as np
-import pickle
 from tensorflow import keras
+import tensorflow as tf
+
+# =============================
+# Cargar modelo
+# =============================
+
+model = keras.models.load_model(
+    "modelo_cod500kOverfitV2.keras",
+    compile=True
+)
 
 
-# Cargar modelo entrenado
-model = keras.models.load_model("modelo/modelo_texto.h5")
-
-# Cargar vectorizador
-with open("modelo/vectorizer.pkl", "rb") as f:
-    vectorizer = pickle.load(f)
-
-
-
-
-ETIQUETAS = ["Negativo", "Positivo"]
-
-
+# =============================
+# Clasificación
+# =============================
 
 def clasificar_texto(texto):
 
+    print(type(texto))
     if texto.strip() == "":
         return {"Error": 1.0}
+    pred = model.predict(tf.constant([texto]))
 
-    texto_vectorizado = vectorizer([texto])
-
-    prediccion = model.predict(texto_vectorizado)
-
-    if prediccion.shape[1] == 1:
-        prob = float(prediccion[0][0])
-
-        resultado = {
-            "Negativo": 1 - prob,
-            "Positivo": prob
-        }
-
-    else:
-        probs = prediccion[0]
-        resultado = {
-            ETIQUETAS[i]: float(probs[i])
-            for i in range(len(ETIQUETAS))
-        }
-
-    return resultado
+    return {
+        "Negativo": float(1 - pred),
+        "Positivo": float(pred)
+    }
 
 
+# =============================
+# Interfaz
+# =============================
 
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
-    gr.Markdown("# Clasificador de Texto con Deep Learning")
+    gr.Markdown("# Clasificador de Reviews de Steam")
     gr.Markdown(
-        "Introduce un texto y el modelo lo clasificará automáticamente."
+        "Introduce una review y el modelo predecirá si es positiva o negativa."
     )
 
     with gr.Row():
+
         with gr.Column():
+
             entrada = gr.Textbox(
                 lines=5,
-                placeholder="Escribe aquí tu texto...",
-                label="Texto de entrada"
+                placeholder="Write a Steam review...",
+                label="Texto"
             )
 
             boton = gr.Button("Clasificar")
 
         with gr.Column():
-            salida = gr.Label(label="Probabilidades por clase")
+
+            salida = gr.Label()
 
     boton.click(
         fn=clasificar_texto,
@@ -73,7 +63,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     )
 
     gr.Markdown(
-        "⚠️ El modelo puede fallar con ironías, jergas o expresiones nuevas."
+        "⚠️ El modelo puede fallar con sarcasmo o jergas nuevas."
     )
 
 
