@@ -1,20 +1,41 @@
 import gradio as gr
 from tensorflow import keras
 import tensorflow as tf
+from pathlib import Path
+
+RUNS_DIR = Path("runs")
 
 
-model = keras.models.load_model(
-    "modelo_cod500kOverfitV2.keras",
-    compile=True
-)
+modelos = {}
+
+for run_folder in RUNS_DIR.iterdir():
+
+    if run_folder.is_dir():
+
+        modelos_en_carpeta = list(run_folder.glob("*.keras"))
+
+        if modelos_en_carpeta:
+
+            modelo_path = modelos_en_carpeta[0]
+
+            nombre_modelo = f"{run_folder.name} | {modelo_path.stem}"
+
+            modelos[nombre_modelo] = keras.models.load_model(modelo_path)
+
+print("Modelos encontrados:")
+for m in modelos:
+    print(m)
 
 
-def clasificar_texto(texto):
 
-    print(type(texto))
+def clasificar_texto(texto, modelo_nombre):
+
     if texto.strip() == "":
         return {"Error": 1.0}
-    pred = model.predict(tf.constant([texto]))
+
+    modelo = modelos[modelo_nombre]
+
+    pred = modelo.predict(tf.constant([texto]), verbose=0)[0][0]
 
     return {
         "Negativo": float(1 - pred),
@@ -26,12 +47,18 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
     gr.Markdown("# Clasificador de Reviews de Steam")
     gr.Markdown(
-        "Introduce una review y el modelo predecirá si es positiva o negativa."
+        "Introduce una review y selecciona el modelo que quieres probar."
     )
 
     with gr.Row():
 
         with gr.Column():
+
+            selector_modelo = gr.Dropdown(
+                choices=list(modelos.keys()),
+                value=list(modelos.keys())[0] if modelos else None,
+                label="Modelo"
+            )
 
             entrada = gr.Textbox(
                 lines=5,
@@ -47,14 +74,13 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
     boton.click(
         fn=clasificar_texto,
-        inputs=entrada,
+        inputs=[entrada, selector_modelo],
         outputs=salida
     )
 
     gr.Markdown(
         "El modelo puede fallar con sarcasmo o jergas nuevas."
     )
-
 
 if __name__ == "__main__":
     demo.launch()
