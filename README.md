@@ -149,14 +149,3 @@ El modelo puede fallar en algunos casos como:
 
 ---
 
-# 🔮 Posibles mejoras
-
-* Comparación entre varios modelos
-* Mostrar métricas directamente en la interfaz
-* Despliegue en HuggingFace Spaces
-* Contenerización con Docker
-* Añadir más datasets y modelos
-
----
-
-
